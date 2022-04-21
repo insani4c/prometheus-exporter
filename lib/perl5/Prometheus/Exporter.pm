@@ -216,18 +216,7 @@ sub format_metrics_text {
 
     my $str = '';
     foreach my $metric (@metrics){
-        my $m = $self->{metrics_factory}->factory($metric);
-        $str .= "# HELP $metric ". $m->{desc}. "\n";
-        $str .= "# TYPE $metric ". lc($m->{type}). "\n";
-
-        if(defined $m->labels){
-            foreach my $label (@{ $m->labels }) {
-                $str .= $metric."{$label} ".$m->label_value($label) . "\n";
-            }
-        }
-        else {
-            $str .= $metric." " . $m->value ."\n";
-        }
+        $str .= $self->{metrics_factory}->factory($metric)->metric_text;
     }
 
     undef($self->{metrics_factory});

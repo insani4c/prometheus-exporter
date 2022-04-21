@@ -2,7 +2,7 @@ package Prometheus::Metric;
 use strict;
 use warnings;
 
-use base qw/Prometheus/;
+use base qw/Prometheus Prometheus::Metric::Format/;
 use Prometheus::Metric::Gauge;
 use Prometheus::Metric::Counter;
 use Data::Dumper;

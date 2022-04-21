@@ -6,16 +6,6 @@ use base 'Prometheus';
 
 my $container;
 
-sub new {
-    my($class, $args) = @_;
-
-    $args    = {} unless defined $args;
-
-    my $self = $class->SUPER::new($args);
-
-    return $self;
-} 
-
 sub add_factory {
     my ($self) = @_;
 
