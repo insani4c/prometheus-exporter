@@ -2,7 +2,7 @@ package Prometheus::Metric;
 use strict;
 use warnings;
 
-use base qw/Prometheus Prometheus::Metric::Format/;
+use base qw/Prometheus/;
 use Prometheus::Metric::Gauge;
 use Prometheus::Metric::Counter;
 use Data::Dumper;
@@ -49,6 +49,28 @@ sub labels {
     my ($self) = @_;
 
     return $self->{labels}    
+}
+
+sub metric_text {
+    my ($self) = @_;
+
+    my $str = '';
+    my $metric = $self->{name};
+    $str .= "# HELP $metric ". $self->{desc}. "\n";
+    $str .= "# TYPE $metric ". lc($self->{type}). "\n";
+
+    if(defined $self->labels){
+        foreach my $label (@{ $self->labels }) {
+            $str .= $metric."{$label} ".$self->label_value($label) . "\n";
+        }
+    }
+    else {
+        $str .= $metric." " . $self->value ."\n";
+    }
+
+    $self->{logp}->debug("Formatted metric text: $str");
+    return $str;
+
 }
 
 1;
