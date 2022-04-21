@@ -1,0 +1,14 @@
+Source: libprometheus-exporter-perl
+Maintainer: Johnny Morano <jmorano@moretrix.com>
+Build-Depends: debhelper (>= 12~)
+Section: net
+Priority: optional
+
+Package: libprometheus-exporter-perl
+Architecture: any
+Depends: adduser, libc6 (>= 2.4), libhttp-daemon-perl, libhttp-message-perl
+Section: net
+Priority: optional
+Homepage: https://github.com/insani4c/prometheus-exporter
+Description: Perl modules to create a Prometheus exporter
+ Set of modules which to easily create a Prometheus exporter based on HTTP::Daemon

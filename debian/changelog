@@ -1,0 +1,5 @@
+libprometheus-exporter-perl (%TAG_VERSION%) unstable; urgency=low
+
+  * Upstream version
+
+ -- Johnny Morano <jmorano@moretrix.com>  %BUILD_DATE%
