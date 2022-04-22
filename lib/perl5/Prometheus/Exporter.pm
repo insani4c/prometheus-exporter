@@ -153,7 +153,7 @@ sub process_request {
                 $self->{logp}->info("Request processed in thread:$tid ($thread_count:$self->{max_threads}), processing_time:$total_processing_time, request_time:$total_request_time, waiting_time:$total_waiting_time");
 
                 # Send the response to client
-                $client->send_response( $self->generate_text_reponse( $self->format_metrics_text($data) ) );
+                $client->send_response( $self->generate_text_reponse( $self->render($data) ) );
                 $client->force_last_request;
             }
             else {
