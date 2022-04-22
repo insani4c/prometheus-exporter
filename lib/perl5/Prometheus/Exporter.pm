@@ -1,14 +1,16 @@
+=head1 Prometheus::Exporter - An exporter classed with threads based on HTTP::Daemon
+=cut
 package Prometheus::Exporter;
 use strict;
 use warnings;
+use threads;
+use threads::shared;
 
 use base 'Prometheus';
 
 use Prometheus::Metric;
 use Prometheus::Metric::Factory;
 
-use threads;
-use threads::shared;
 use HTTP::Daemon;
 use HTTP::Status;
 use HTTP::Response;
@@ -17,7 +19,25 @@ use Data::Dumper;
 
 #our VERSION = '0.1.0';
 
-# Defaults
+=head2 Defaults used during constructing:
+
+=over 2
+
+=item * LISTEN_PORT           9367
+
+=item * LISTEN_ADDR           '0.0.0.0'
+
+=item * MAX_THREADS           5
+
+=item * MAX_LISTEN_QUEUE      25
+
+=item * MAX_REQUEST_TIMEOUT   15
+
+=item * MAX_CLIENT_TIME       30
+
+=back
+
+=cut
 use constant LISTEN_PORT          => 9367;
 use constant LISTEN_ADDR          => '0.0.0.0';
 use constant MAX_THREADS          => 5;
@@ -27,21 +47,12 @@ use constant MAX_CLIENT_TIME      => 30;
 
 my $thread_count :shared = 0;
 
-#
-# Metrics variable
-#
-# $self->register_metrics(
-#    {
-#        metrics_name = > ["type", "description", labels],
-#        ...
-#    }
-#)
-# the input for register_metrics() should be a hashref with the metric name as key 
-# name. The keys point to a arrayref with the following elements:
-# 0: The type of metric: Gauge, Counter, Histogram
-# 1: The description of the metric
-# 3: either undef or an arrayref of label pairs. Example: ["code=200", "code=404", "code=503"]. When used, the data returned must be an arrayref too, in the same order.
+=head2 Constructor
 
+The constructor calls basically the Prometheus constructor and logs the
+defaults values.
+
+=cut
 sub new {
     my($class, $args) = @_;
 
@@ -57,15 +68,35 @@ sub new {
     return $self;
 }
 
+=head2 required_arguments()
+
+Verify if all required arguments are passed or add them with default values.
+This is called automatically in the constructor.
+
+=cut
 sub required_arguments {
     $_[1]    = {} unless defined $_[1];
 
     $_[1]->{max_threads}         //= MAX_THREADS;
     $_[1]->{max_request_timeout} //= MAX_REQUEST_TIMEOUT;
     $_[1]->{max_client_time}     //= MAX_CLIENT_TIME;
+    $_[1]->{max_listen_queue}    //= MAX_LISTEN_QUEUE;
     $_[1]->{listen_port}         //= LISTEN_PORT;
+    $_[1]->{listen_addr}         //= LISTEN_ADDR;
 }
 
+=head2 run()
+
+run() starts the HTTP::Daemon server in blocking mode.
+It measures the request time of each client.
+Client requests are processed in parallel using threads. A maximum number of 
+threads can be configured in the constructor.
+
+Each client request is then handled by process_request() in a separate thread. If the
+maximum number of threads has been reached, the client request will be queued and checked 
+again every 0.3 seconds.
+
+=cut
 sub run {
     my ($self) = @_;
 
@@ -121,6 +152,13 @@ sub run {
     }
 }
 
+=head2 process_request()
+
+During request processing, the method will first collect metric data by calling _collect().
+If metrics data was returned, the data will be rendered to Prometheus compatible text and returned
+to the client in a HTTP response.
+
+=cut
 sub process_request {
     my ($self, $client, $request_start_time) = @_;
     my $tid = threads->tid();
@@ -181,6 +219,24 @@ sub process_request {
     threads->exit;
 }
 
+=head2 register_metrics()
+
+The metrics configuration should be provided as a hashref.
+
+Example:
+
+=begin text
+
+    {
+        test_gauge         => {type => "gauge",     desc => "A test metric"},
+        test_gauge_labels  => {type => "gauge",     desc => "A test metric", labels => ["code=42", "code=99"]},
+        test_counter       => {type => "counter",   desc => "A test metric"},
+        test_histogram     => {type => "histogram", buckets => ['0.3', '0.6', '1.2', '+Inf']},
+    }
+
+=end text
+
+=cut
 sub register_metrics {
     my ($self, $metrics_map) = @_;
 
@@ -189,6 +245,11 @@ sub register_metrics {
     return;
 }
 
+=head2 register_collector()
+
+Takes a subref or coderef as argument
+
+=cut
 sub register_collector {
     my ($self, $code_ref) = @_;
 
