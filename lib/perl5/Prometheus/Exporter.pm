@@ -208,7 +208,13 @@ sub _collect {
     return( &{ $self->{_collector} }($data) )
 }
 
-sub format_metrics_text {
+sub get_metric {
+    my ($self, $metric_name) = @_;
+
+    return $self->{metrics_factory}->factory($metric_name)
+}
+
+sub render {
     my ($self, $data) = @_;
     my @metrics = $self->{metrics_factory}->metrics;
 
@@ -219,7 +225,7 @@ sub format_metrics_text {
 
     my $str = '';
     foreach my $metric (@metrics){
-        $str .= $self->{metrics_factory}->factory($metric)->metric_text;
+        $str .= $self->get_metric($metric)->metric_text;
     }
 
     undef($self->{metrics_factory});
