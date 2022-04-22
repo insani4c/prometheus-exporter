@@ -43,13 +43,7 @@ my $thread_count :shared = 0;
 sub new {
     my($class, $args) = @_;
 
-    $args    = {} unless defined $args;
     my $self = $class->SUPER::new($args);
-
-    $self->{max_threads}         //= MAX_THREADS;
-    $self->{max_request_timeout} //= MAX_REQUEST_TIMEOUT;
-    $self->{max_client_time}     //= MAX_CLIENT_TIME;
-    $self->{listen_port}         //= LISTEN_PORT;
 
     $self->{logp}->debug("max_threads: ", $self->{max_threads});
     $self->{logp}->debug("max_request_timeout: ", $self->{max_request_timeout});
@@ -57,6 +51,15 @@ sub new {
     $self->{logp}->debug("listen_port: ", $self->{listen_port});
 
     return $self;
+}
+
+sub required_arguments {
+    $_[1]    = {} unless defined $_[1];
+
+    $_[1]->{max_threads}         //= MAX_THREADS;
+    $_[1]->{max_request_timeout} //= MAX_REQUEST_TIMEOUT;
+    $_[1]->{max_client_time}     //= MAX_CLIENT_TIME;
+    $_[1]->{listen_port}         //= LISTEN_PORT;
 }
 
 sub run {
