@@ -19,7 +19,9 @@ use Data::Dumper;
 
 # Defaults
 use constant LISTEN_PORT          => 9367;
+use constant LISTEN_ADDR          => '0.0.0.0';
 use constant MAX_THREADS          => 5;
+use constant MAX_LISTEN_QUEUE     => 25;
 use constant MAX_REQUEST_TIMEOUT  => 15;
 use constant MAX_CLIENT_TIME      => 30;
 
@@ -49,6 +51,8 @@ sub new {
     $self->{logp}->debug("max_request_timeout: ", $self->{max_request_timeout});
     $self->{logp}->debug("max_client_time: ", $self->{max_client_time});
     $self->{logp}->debug("listen_port: ", $self->{listen_port});
+    $self->{logp}->debug("listen_addr: ", $self->{listen_addr});
+    $self->{logp}->debug("max listen queue: ", $self->{max_listen_queue});
 
     return $self;
 }
@@ -67,10 +71,11 @@ sub run {
 
     my $d = HTTP::Daemon->new(
         LocalPort => $self->{listen_port},
+        LocalAddr => $self->{listen_addr},
         ReuseAddr => 1,
         ReusePort => 1,
         Blocking  => 1,
-        Listen    => 20,
+        Listen    => $self->{max_listen_queue},
         ) || die;
     
     $self->{logp}->info("Prometheus::Exporter started!");
